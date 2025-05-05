@@ -1,17 +1,16 @@
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import { UserRoles } from 'src/auth/entities/user-role.entity';
+import { Role } from 'src/auth/entities/role.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity({
-  name: 'users',
-})
+@Entity()
 export class User {
   @ApiProperty()
   @PrimaryGeneratedColumn('uuid')
@@ -29,14 +28,15 @@ export class User {
   @Column()
   name: string;
 
-  @OneToMany(() => UserRoles, (userRole) => userRole.user)
-  userRoles: UserRoles[];
+  @ManyToMany(() => Role)
+  @JoinTable()
+  roles: Role[];
 
   @ApiProperty()
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn()
   createdAt: Date;
 
   @ApiProperty()
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn()
   updatedAt: Date;
 }

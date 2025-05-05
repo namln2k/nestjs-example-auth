@@ -6,7 +6,6 @@ import { UsersModule } from 'src/users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { Role } from './entities/role.entity';
-import { UserRoles } from './entities/user-role.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 
@@ -16,7 +15,7 @@ import { LocalStrategy } from './strategies/local.strategy';
   imports: [
     UsersModule,
     PassportModule,
-    TypeOrmModule.forFeature([User, Role, UserRoles]),
+    TypeOrmModule.forFeature([User, Role]),
   ],
 })
 export class AuthModule {}
