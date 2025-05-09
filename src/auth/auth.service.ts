@@ -70,8 +70,9 @@ export class AuthService {
     user: Partial<User>,
   ): Promise<{ accessToken: string }> {
     const accessToken = await this.jwtService.signAsync({
-      id: user.id,
+      sub: user.id,
       email: user.email,
+      roles: user.roles,
       name: user.name,
     });
 
