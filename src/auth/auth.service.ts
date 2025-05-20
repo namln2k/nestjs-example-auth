@@ -1,27 +1,18 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
-import { APP_CONSTANTS } from 'src/common/constants/app.constant';
 import { SQLITE_ERROR_CODES } from 'src/common/constants/error-codes.constant';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { LogInDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { TokenService } from './token.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
+    private readonly tokenService: TokenService,
   ) {}
-
-  async createHash(password: string): Promise<string> {
-    return await bcrypt.hash(password, APP_CONSTANTS.HASH_ROUNDS);
-  }
-
-  async compareHash(password: string, hash: string): Promise<boolean> {
-    return await bcrypt.compare(password, hash);
-  }
 
   async register(register: RegisterDto): Promise<User> {
     const { email, name, password } = register;
@@ -31,11 +22,10 @@ export class AuthService {
 
       user.email = email;
       user.name = name;
-      user.password = await this.createHash(password);
+      user.password = await this.tokenService.createHash(password);
 
       return await this.usersService.create(user);
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (error?.code === SQLITE_ERROR_CODES.SQLITE_CONSTRAINT) {
         throw new BadRequestException('Email already exists');
       }
@@ -51,7 +41,10 @@ export class AuthService {
       throw new BadRequestException('Invalid credentials');
     }
 
-    const isPasswordMatch = await this.compareHash(password, user.password);
+    const isPasswordMatch = await this.tokenService.compareHash(
+      password,
+      user.password,
+    );
 
     if (!isPasswordMatch) {
       throw new BadRequestException('Invalid credentials');
@@ -60,22 +53,21 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LogInDto): Promise<{ accessToken: string }> {
+  async login(
+    loginDto: LogInDto,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.authenticate(loginDto);
+    const accessToken = await this.tokenService.generateAccessToken(user);
+    const refreshToken = this.tokenService.generateRefreshToken();
+    await this.tokenService.storeRefreshToken(refreshToken, user.id);
 
-    return await this.generateAccessToken(user);
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 
-  async generateAccessToken(
-    user: Partial<User>,
-  ): Promise<{ accessToken: string }> {
-    const accessToken = await this.jwtService.signAsync({
-      sub: user.id,
-      email: user.email,
-      roles: user.roles,
-      name: user.name,
-    });
-
-    return { accessToken };
+  async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    return true;
   }
 }

@@ -1,13 +1,16 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class RefreshToken {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
   @Column()
   value: string;
 
   @Column()
   userId: string;
 
-  @Column({ type: 'time' })
-  expiresAt: string;
+  @Column()
+  expiresAt: number;
 }
