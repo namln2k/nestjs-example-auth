@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { SQLITE_ERROR_CODES } from 'src/common/constants/error-codes.constant';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
@@ -53,21 +57,40 @@ export class AuthService {
     return user;
   }
 
+  async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    const existedToken = await this.tokenService.authenticateRefreshToken(
+      refreshTokenDto.token,
+    );
+
+    if (!existedToken) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const user = await this.usersService.findById(existedToken?.userId);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return this.createTokens(user);
+  }
+
   async login(
     loginDto: LogInDto,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const user = await this.authenticate(loginDto);
-    const accessToken = await this.tokenService.generateAccessToken(user);
-    const refreshToken = this.tokenService.generateRefreshToken();
+
+    return this.createTokens(user);
+  }
+
+  async createTokens(user: User) {
+    const accessToken = await this.tokenService.createAccessToken(user);
+    const refreshToken = this.tokenService.createRefreshToken();
     await this.tokenService.storeRefreshToken(refreshToken, user.id);
 
     return {
       accessToken,
       refreshToken,
     };
-  }
-
-  async refreshToken(refreshTokenDto: RefreshTokenDto) {
-    return true;
   }
 }

@@ -6,7 +6,7 @@ import * as bcrypt from 'bcrypt';
 import * as moment from 'moment';
 import { APP_CONSTANTS } from 'src/common/constants/app.constant';
 import { User } from 'src/users/entities/user.entity';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { RefreshToken } from './entities/refresh-token.entity';
 
@@ -27,7 +27,7 @@ export class TokenService {
     return await bcrypt.compare(password, hash);
   }
 
-  async generateAccessToken(user: Partial<User>): Promise<string> {
+  async createAccessToken(user: Partial<User>): Promise<string> {
     return await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
@@ -36,23 +36,46 @@ export class TokenService {
     });
   }
 
-  generateRefreshToken(): string {
+  createRefreshToken(): string {
     return uuidv4();
+  }
+
+  calculateExpiryTimestamp(): number {
+    const expiryHours = Number.parseInt(
+      this.configService.get('REFRESH_TOKEN_EXPIRY_HOURS') || '24',
+    );
+
+    return moment().add(expiryHours, 'hours').unix();
   }
 
   async storeRefreshToken(
     token: string,
     userId: string,
   ): Promise<RefreshToken> {
-    const expiryHours = Number.parseInt(
-      this.configService.get('REFRESH_TOKEN_EXPIRY_HOURS') || '24',
-    );
-    const expiresAt = moment().add(expiryHours, 'hours').unix();
+    const expiresAt = this.calculateExpiryTimestamp();
 
     return await this.refreshTokenRepository.save({
       userId,
       value: token,
       expiresAt,
     });
+  }
+
+  async authenticateRefreshToken(token: string) {
+    const existedToken = await this.refreshTokenRepository.findOneBy({
+      value: token,
+      isActive: true,
+      expiresAt: MoreThan(moment().unix()),
+    });
+
+    if (!existedToken) {
+      return null;
+    }
+
+    await this.refreshTokenRepository.update(existedToken.id, {
+      isActive: false,
+    });
+
+    return existedToken;
   }
 }
