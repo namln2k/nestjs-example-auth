@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -39,9 +40,9 @@ import { UsersModule } from './users/users.module';
       useFactory: async () => ({
         ...dataSource.options,
         autoLoadEntities: true,
-        seeds: ['dist/database/seeds/**/*.js'],
       }),
     }),
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

@@ -2,6 +2,7 @@ import { DataSource } from 'typeorm';
 import { Seeder } from 'typeorm-extension';
 import { v4 as uuidv4 } from 'uuid';
 import { Role } from '../../auth/entities/role.entity';
+import { Injectable } from '@nestjs/common';
 
 const roles = [
   { id: uuidv4(), name: 'admin' },
@@ -10,7 +11,8 @@ const roles = [
   { id: uuidv4(), name: 'guest' },
 ];
 
-export default class UserSeeder implements Seeder {
+@Injectable()
+export default class RoleSeeder implements Seeder {
   public async run(dataSource: DataSource): Promise<void> {
     const repository = dataSource.getRepository(Role);
 

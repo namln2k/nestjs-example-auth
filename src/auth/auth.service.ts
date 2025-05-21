@@ -22,13 +22,11 @@ export class AuthService {
     const { email, name, password } = register;
 
     try {
-      const user = new User();
-
-      user.email = email;
-      user.name = name;
-      user.password = await this.tokenService.createHash(password);
-
-      return await this.usersService.create(user);
+      return await this.usersService.create({
+        email,
+        name,
+        password: await this.tokenService.createHash(password),
+      });
     } catch (error) {
       if (error?.code === SQLITE_ERROR_CODES.SQLITE_CONSTRAINT) {
         throw new BadRequestException('Email already exists');
