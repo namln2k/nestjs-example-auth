@@ -8,11 +8,10 @@ import { AuthService } from './auth.service';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { Role } from './entities/role.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { LocalStrategy } from './strategies/local.strategy';
 import { TokenService } from './token.service';
 
 @Module({
-  providers: [AuthService, JwtStrategy, LocalStrategy, TokenService],
+  providers: [AuthService, JwtStrategy, TokenService],
   controllers: [AuthController],
   imports: [
     UsersModule,

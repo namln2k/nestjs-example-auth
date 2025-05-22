@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/auth/entities/role.entity';
-import { APP_CONSTANTS } from 'src/common/constants/app.constant';
+import { JWT } from 'src/common/constants/app.constant';
 import { UserRole } from 'src/common/constants/roles.constants';
 import { User } from 'src/users/entities/user.entity';
 import { DataSource } from 'typeorm';
@@ -22,7 +22,7 @@ export default class AdminUserSeeder implements Seeder {
     const email = configService.get<string>('ADMIN_EMAIL') || '';
     const name = configService.get<string>('ADMIN_NAME') || '';
     const password = configService.get<string>('ADMIN_PASSWORD') || '';
-    const passwordHash = await bcrypt.hash(password, APP_CONSTANTS.HASH_ROUNDS);
+    const passwordHash = await bcrypt.hash(password, JWT.HASH_ROUNDS);
 
     const existingUser = await userRepository.findOneBy({
       email: email,
@@ -37,6 +37,7 @@ export default class AdminUserSeeder implements Seeder {
         email,
         name,
         password: passwordHash,
+        roles: adminRole,
       });
       await userRepository.save(adminUser);
     }

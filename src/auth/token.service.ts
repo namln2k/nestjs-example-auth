@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import * as moment from 'moment';
-import { APP_CONSTANTS } from 'src/common/constants/app.constant';
+import { JWT } from 'src/common/constants/app.constant';
 import { User } from 'src/users/entities/user.entity';
 import { MoreThan, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,7 +20,7 @@ export class TokenService {
   ) {}
 
   async createHash(password: string) {
-    return await bcrypt.hash(password, APP_CONSTANTS.HASH_ROUNDS);
+    return await bcrypt.hash(password, JWT.HASH_ROUNDS);
   }
 
   async compareHash(password: string, hash: string): Promise<boolean> {

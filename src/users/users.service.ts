@@ -1,24 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, FindOneOptions, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
+  async findOne(options: FindOneOptions<User>) {
+    return await this.userRepository.findOne(options);
+  }
+
   async findByEmail(email: string) {
-    return await this.usersRepository.findOne({ where: { email } });
+    return await this.userRepository.findOne({ where: { email } });
   }
 
   async findById(id: string) {
-    return await this.usersRepository.findOne({ where: { id } });
+    return await this.userRepository.findOne({ where: { id } });
   }
 
-  async create(user: DeepPartial<User>) {
-    return await this.usersRepository.save(user);
+  async save(user: DeepPartial<User>) {
+    return await this.userRepository.save(user);
   }
 }

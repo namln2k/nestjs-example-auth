@@ -1,11 +1,11 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { JwtGuard } from 'src/auth/guards/jwt.guard';
 
 @Controller('users')
 export class UsersController {
   constructor() {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtGuard)
   @Get('me')
   async me() {
     await new Promise((resolve) => setTimeout(resolve, 1000));

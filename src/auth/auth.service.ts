@@ -3,30 +3,44 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { SQLITE_ERROR_CODES } from 'src/common/constants/error-codes.constant';
+import { UserRole } from 'src/common/constants/roles.constants';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { Repository } from 'typeorm';
 import { LogInDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { Role } from './entities/role.entity';
 import { TokenService } from './token.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
+    @InjectRepository(User)
+    private readonly userService: UsersService,
     private readonly tokenService: TokenService,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
 
-  async register(register: RegisterDto): Promise<User> {
+  async register(register: RegisterDto): Promise<boolean> {
     const { email, name, password } = register;
 
+    const userRole = await this.roleRepository.findBy({
+      name: UserRole.USER,
+    });
+
     try {
-      return await this.usersService.create({
+      await this.userService.save({
         email,
         name,
         password: await this.tokenService.createHash(password),
+        roles: userRole,
       });
+
+      return true;
     } catch (error) {
       if (error?.code === SQLITE_ERROR_CODES.SQLITE_CONSTRAINT) {
         throw new BadRequestException('Email already exists');
@@ -37,7 +51,14 @@ export class AuthService {
   }
 
   async authenticate({ email, password }: LogInDto): Promise<User> {
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.userService.findOne({
+      where: {
+        email,
+      },
+      relations: {
+        roles: true,
+      },
+    });
 
     if (!user) {
       throw new BadRequestException('Invalid credentials');
@@ -64,7 +85,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const user = await this.usersService.findById(existedToken?.userId);
+    const user = await this.userService.findOne({
+      where: {
+        id: existedToken.userId,
+      },
+    });
 
     if (!user) {
       throw new UnauthorizedException('User not found');

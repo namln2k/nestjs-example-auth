@@ -7,7 +7,7 @@ import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { RolesGuard } from './auth/guards/roles.guard';
+import { JwtGuard } from './auth/guards/jwt.guard';
 import dataSource from './database/data-source';
 import { UsersModule } from './users/users.module';
 
@@ -49,7 +49,7 @@ import { UsersModule } from './users/users.module';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: RolesGuard,
+      useClass: JwtGuard,
     },
   ],
 })

@@ -1,3 +1,4 @@
+import { UserRole } from 'src/common/constants/roles.constants';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -6,5 +7,5 @@ export class Role {
   id: string;
 
   @Column({ unique: true })
-  name: string;
+  name: UserRole;
 }
